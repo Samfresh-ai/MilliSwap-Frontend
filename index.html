@@ -5,99 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MilliSwap</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <!-- Updated ethers.js CDN -->
-    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js" type="text/javascript"></script>
 </head>
 <body>
-    <div class="background-text">MilliSwap</div>
-    <div class="header-logo">M</div>
-    <header>
-        <div class="header-text">
-            <h1 class="animated-header">MilliSwap</h1>
-            <p class="slogan">Swap Smarter, Win Bigger!</p>
-        </div>
-        <div class="header-buttons">
-            <div class="wallet-container">
-                <button id="connect-wallet">Connect Wallet</button>
-                <div id="wallet-dropdown" class="wallet-dropdown">
-                    <div id="wallet-balances">
-                        <p>MON: <span id="mon-balance">0</span></p>
-                        <p>DAI: <span id="dai-balance">0</span></p>
-                        <p>USDT: <span id="usdt-balance">0</span></p>
-                        <p>ETH: <span id="eth-balance">0</span></p>
-                        <p>BNB: <span id="bnb-balance">0</span></p>
-                        <p>MATIC: <span id="matic-balance">0</span></p>
-                    </div>
-                    <button id="disconnect-wallet">Disconnect Wallet</button>
-                </div>
-            </div>
-            <button id="history-button">History</button>
-        </div>
-    </header>
-    <nav class="tab-nav">
-        <button class="tab-button active" data-tab="swap">Swap</button>
-        <button class="tab-button" data-tab="explore">Explore</button>
-    </nav>
-    <main>
-        <div id="history" class="history-content">
-            <section class="history-box">
-                <h2>Transaction History</h2>
-                <div id="history-list">
-                </div>
-            </section>
-        </div>
-        <div id="swap" class="tab-content active">
-            <section class="swap-box">
-                <h2>Swap Tokens</h2>
-                <div class="swap-section" id="from-section">
-                    <label for="from-amount">From</label>
-                    <input type="text" id="from-amount" placeholder="Enter amount">
-                    <select id="from-token">
-                        <option value="" disabled selected>Select a token</option>
-                        <option value="mon">MON (0)</option>
-                        <option value="dai">DAI (0)</option>
-                        <option value="usdt">USDT (0)</option>
-                        <option value="eth">ETH (0)</option>
-                        <option value="bnb">BNB (0)</option>
-                        <option value="matic">MATIC (0)</option>
-                    </select>
-                    <p>Balance: <span id="from-balance">0</span></p>
-                </div>
-                <div class="arrow-icon">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-                <div class="swap-section" id="to-section">
-                    <label for="to-token">To</label>
-                    <input type="text" id="to-amount" placeholder="Estimated amount" disabled>
-                    <select id="to-token">
-                        <option value="" disabled selected>Select a token</option>
-                        <option value="mon">MON (0)</option>
-                        <option value="dai">DAI (0)</option>
-                        <option value="usdt">USDT (0)</option>
-                        <option value="eth">ETH (0)</option>
-                        <option value="bnb">BNB (0)</option>
-                        <option value="matic">MATIC (0)</option>
-                    </select>
-                    <p>Balance: <span id="to-balance">0</span></p>
-                </div>
-                <button id="swap-button">Swap</button>
-                <p id="output">Result will appear here</p>
-            </section>
-        </div>
-        <div id="explore" class="tab-content">
-            <section class="explore-box">
-                <h2>Explore MilliSwap</h2>
-                <div class="explore-links">
-                    <p><strong>Follow us on X:</strong> <a href="https://x.com/0xsamxbt" target="_blank">x.com/0xsamxbt</a></p>
-                    <p><strong>Check Transaction Count:</strong> <a href="https://testnet.monadexplorer.com/" target="_blank">Monad Testnet Explorer</a></p>
-                    <p><strong>Documentation:</strong> <a href="https://milliswap-docs.example.com" target="_blank">MilliSwap Docs</a></p>
-                </div>
-            </section>
-        </div>
-    </main>
+    <div class="container">
+        <h1>MilliSwap</h1>
+        <button id="connectButton">Connect Wallet</button>
+        <p id="walletAddress">Not connected</p>
+
+        <h2>Balances</h2>
+        <p>MON: <span id="monBalance">0</span></p>
+        <p>DAK: <span id="dakBalance">0</span></p>
+        <p>YAKI: <span id="yakiBalance">0</span></p>
+        <p>WMON: <span id="wmonBalance">0</span></p>
+        <p>USDC: <span id="usdcBalance">0</span></p>
+        <p>MAD: <span id="madBalance">0</span></p>
+
+        <h2>Swap</h2>
+        <label for="fromToken">From:</label>
+        <select id="fromToken">
+            <option value="MON">MON</option>
+            <option value="DAK">DAK</option>
+            <option value="YAKI">YAKI</option>
+            <option value="WMON">WMON</option>
+            <option value="USDC">USDC</option>
+            <option value="MAD">MAD</option>
+        </select>
+        <br><br>
+        <label for="toToken">To:</label>
+        <select id="toToken">
+            <option value="DAK">DAK</option>
+            <option value="YAKI">YAKI</option>
+            <option value="WMON">WMON</option>
+            <option value="USDC">USDC</option>
+            <option value="MAD">MAD</option>
+            <option value="MON">MON</option>
+        </select>
+        <br><br>
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" step="any" min="0">
+        <br><br>
+        <button id="swapButton">Swap</button>
+    </div>
+    <script src="https://cdn.ethers.io/lib/ethers-6.7.0.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
