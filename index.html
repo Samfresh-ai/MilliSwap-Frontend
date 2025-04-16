@@ -88,7 +88,15 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.ethers.io/lib/ethers-6.7.0.umd.min.js"></script>
+    <!-- Fallback to local ethers.js if CDN fails -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js" onload="if(typeof ethers === 'undefined') loadLocalEthers()" onerror="loadLocalEthers()"></script>
+    <script>
+        function loadLocalEthers() {
+            var script = document.createElement('script');
+            script.src = 'ethers-6.7.0.umd.min.js'; // Ensure this file is in your project directory
+            document.body.appendChild(script);
+        }
+    </script>
     <script src="script.js"></script>
 </body>
 </html>

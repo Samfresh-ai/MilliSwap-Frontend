@@ -41,10 +41,8 @@ const rates = {
 async function connectWallet() {
     if (window.ethereum) {
         try {
-            // Request account access
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             provider = new ethers.BrowserProvider(window.ethereum);
-            // Ensure provider is ready
             await provider.ready;
             signer = await provider.getSigner();
             contract = new ethers.Contract(SWAP_ADDRESS, SWAP_ABI, signer);
