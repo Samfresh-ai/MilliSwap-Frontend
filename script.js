@@ -41,19 +41,23 @@ const rates = {
 async function connectWallet() {
     if (window.ethereum) {
         try {
-            await window.ethereum.request({ method: "eth_requestAccounts" });
+            // Request account access
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
             provider = new ethers.BrowserProvider(window.ethereum);
+            // Ensure provider is ready
+            await provider.ready;
             signer = await provider.getSigner();
             contract = new ethers.Contract(SWAP_ADDRESS, SWAP_ABI, signer);
             document.getElementById("connectButton").style.display = "none";
             document.getElementById("disconnectButton").style.display = "inline-block";
             await updateBalances();
+            console.log("Connected to wallet:", await signer.getAddress());
         } catch (error) {
             console.error("Connection error:", error);
-            alert("Failed to connect wallet");
+            alert("Failed to connect wallet. Ensure MetaMask is installed and unlocked. Error: " + error.message);
         }
     } else {
-        alert("Please install MetaMask");
+        alert("Please install MetaMask to connect your wallet.");
     }
 }
 
@@ -207,7 +211,6 @@ function updateHistory() {
     `).join("");
 }
 
-// Tab switching
 document.getElementById("swapTab").addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
     document.getElementById("swapTab").classList.add("active");
@@ -229,7 +232,6 @@ document.getElementById("historyTab").addEventListener("click", () => {
     document.getElementById("historySection").classList.add("active");
 });
 
-// Event listeners
 document.getElementById("connectButton").addEventListener("click", connectWallet);
 document.getElementById("disconnectButton").addEventListener("click", disconnectWallet);
 document.getElementById("swapButton").addEventListener("click", swap);
@@ -238,7 +240,6 @@ document.getElementById("fromAmount").addEventListener("input", updateEstimatedA
 document.getElementById("fromToken").addEventListener("change", updateEstimatedAmount);
 document.getElementById("toToken").addEventListener("change", updateEstimatedAmount);
 
-// Auto-connect if wallet is already connected
 window.addEventListener("load", async () => {
     if (window.ethereum) {
         try {
