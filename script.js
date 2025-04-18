@@ -29,7 +29,8 @@ const MAD_ADDRESS = "0xC8527e96c3CB9522f6E35e95C0A28feAb8144f15";
 let provider, signer, contract;
 let swapHistory = [];
 
-const rates = {
+// Rates for MON to other tokens
+const baseRates = {
     MON: { DAK: 10, YAKI: 20, WMON: 1, USDC: 100, MAD: 50 },
     DAK: { MON: 0.1 },
     YAKI: { MON: 0.05 },
@@ -37,6 +38,18 @@ const rates = {
     USDC: { MON: 0.01 },
     MAD: { MON: 0.02 }
 };
+
+// Function to calculate rate between any two tokens via MON
+function getRate(fromToken, toToken) {
+    if (fromToken === toToken) return 1;
+    if (fromToken === "MON") return baseRates.MON[toToken] || 0;
+    if (toToken === "MON") return baseRates[fromToken].MON || 0;
+
+    // Calculate rate through MON (e.g., DAK -> MON -> YAKI)
+    const fromToMon = baseRates[fromToken].MON || 0;
+    const monToTo = baseRates.MON[toToken] || 0;
+    return fromToMon * monToTo;
+}
 
 async function connectWallet() {
     if (window.ethereum) {
@@ -102,7 +115,7 @@ function updateEstimatedAmount() {
     }
 
     const amount = parseFloat(fromAmount);
-    const rate = rates[fromToken][toToken];
+    const rate = getRate(fromToken, toToken);
     if (rate) {
         const estimated = amount * rate;
         document.getElementById("toAmount").value = estimated.toFixed(4);
@@ -139,6 +152,7 @@ async function swap() {
 
     try {
         let tx;
+        // Case 1: Direct swap involving MON
         if (fromToken === "MON") {
             const monAmount = ethers.parseEther(amount);
             if (toToken === "DAK") {
@@ -152,7 +166,7 @@ async function swap() {
             } else if (toToken === "MAD") {
                 tx = await contract.swapMONForMAD(monAmount, { value: monAmount });
             }
-        } else {
+        } else if (toToken === "MON") {
             let tokenAmount, decimals;
             if (fromToken === "DAK") {
                 decimals = 18;
@@ -175,7 +189,57 @@ async function swap() {
                 tokenAmount = ethers.parseUnits(amount, decimals);
                 tx = await contract.swapMADForMON(tokenAmount);
             }
+        } else {
+            // Case 2: Swap between non-MON tokens (e.g., DAK -> YAKI)
+            // Step 1: Swap fromToken to MON
+            let tokenAmount, decimals;
+            let monAmount;
+            if (fromToken === "DAK") {
+                decimals = 18;
+                tokenAmount = ethers.parseUnits(amount, decimals);
+                tx = await contract.swapDAKForMON(tokenAmount);
+                await tx.wait();
+                monAmount = ethers.parseEther((parseFloat(amount) * getRate("DAK", "MON")).toString());
+            } else if (fromToken === "YAKI") {
+                decimals = 18;
+                tokenAmount = ethers.parseUnits(amount, decimals);
+                tx = await contract.swapYAKIForMON(tokenAmount);
+                await tx.wait();
+                monAmount = ethers.parseEther((parseFloat(amount) * getRate("YAKI", "MON")).toString());
+            } else if (fromToken === "WMON") {
+                decimals = 18;
+                tokenAmount = ethers.parseUnits(amount, decimals);
+                tx = await contract.swapWMONForMON(tokenAmount);
+                await tx.wait();
+                monAmount = ethers.parseEther((parseFloat(amount) * getRate("WMON", "MON")).toString());
+            } else if (fromToken === "USDC") {
+                decimals = 6;
+                tokenAmount = ethers.parseUnits(amount, decimals);
+                tx = await contract.swapUSDCForMON(tokenAmount);
+                await tx.wait();
+                monAmount = ethers.parseEther((parseFloat(amount) * getRate("USDC", "MON")).toString());
+            } else if (fromToken === "MAD") {
+                decimals = 18;
+                tokenAmount = ethers.parseUnits(amount, decimals);
+                tx = await contract.swapMADForMON(tokenAmount);
+                await tx.wait();
+                monAmount = ethers.parseEther((parseFloat(amount) * getRate("MAD", "MON")).toString());
+            }
+
+            // Step 2: Swap MON to toToken
+            if (toToken === "DAK") {
+                tx = await contract.swapMONForDAK(monAmount, { value: monAmount });
+            } else if (toToken === "YAKI") {
+                tx = await contract.swapMONForYAKI(monAmount, { value: monAmount });
+            } else if (toToken === "WMON") {
+                tx = await contract.swapMONForWMON(monAmount, { value: monAmount });
+            } else if (toToken === "USDC") {
+                tx = await contract.swapMONForUSDC(monAmount, { value: monAmount });
+            } else if (toToken === "MAD") {
+                tx = await contract.swapMONForMAD(monAmount, { value: monAmount });
+            }
         }
+
         await tx.wait();
         alert("Swap successful!");
         swapHistory.push({
