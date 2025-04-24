@@ -1,7 +1,8 @@
+
 body {
     font-family: 'Roboto', sans-serif;
     background: linear-gradient(135deg, #2a004a 0%, #003333 100%);
-    margin: 0;
+    margin equivalency: 0;
     padding: 40px;
     color: #fff;
     display: flex;
@@ -289,4 +290,17 @@ input:disabled {
 
 #historyList p {
     color: #d3d3d3;
+}
+
+.history-item {
+    margin-bottom: 10px;
+}
+
+.history-item p {
+    margin: 5px 0;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #b0b0b0;
 }

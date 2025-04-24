@@ -1,4 +1,5 @@
-const SWAP_ADDRESS = "0x4d6F113B62A4dcf455aa42Db7A9B6c429B7e9F30";
+
+const SWAP_ADDRESS = "0xb01449a6f2d4d5dF8E43149e1a5C8E858f7b4d09"; // Updated address
 const SWAP_ABI = [
     "function depositMON() external payable",
     "function depositDAK(uint256 amount) external",
@@ -26,8 +27,16 @@ const WMON_ADDRESS = "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701";
 const USDC_ADDRESS = "0x5D876D73f4441D5f2438B1A3e2A51771B337F27A";
 const MAD_ADDRESS = "0xC8527e96c3CB9522f6E35e95C0A28feAb8144f15";
 
+const ERC20_ABI = [
+    "function approve(address spender, uint256 amount) external returns (bool)",
+    "function allowance(address owner, address spender) external view returns (uint256)",
+    "function balanceOf(address account) external view returns (uint256)",
+    "function decimals() external view returns (uint8)"
+];
+
 let provider, signer, contract;
 let swapHistory = [];
+let tokenContracts = {};
 
 // Rates for MON to other tokens
 const baseRates = {
@@ -51,6 +60,36 @@ function getRate(fromToken, toToken) {
     return fromToMon * monToTo;
 }
 
+// Approve ERC20 token spending
+async function approveToken(tokenSymbol, amount) {
+    if (!signer || !contract) {
+        throw new Error("Please connect wallet first");
+    }
+
+    const tokenContract = tokenContracts[tokenSymbol];
+    if (!tokenContract) {
+        throw new Error(`Token ${tokenSymbol} not supported`);
+    }
+
+    try {
+        const decimals = tokenSymbol === "USDC" ? 6 : 18;
+        const amountInUnits = ethers.parseUnits(amount.toString(), decimals);
+        const address = await signer.getAddress();
+        const allowance = await tokenContract.allowance(address, SWAP_ADDRESS);
+
+        if (allowance < amountInUnits) {
+            const tx = await tokenContract.approve(SWAP_ADDRESS, amountInUnits);
+            await tx.wait();
+            console.log(`Approved ${amount} ${tokenSymbol} for swapping`);
+        } else {
+            console.log(`${tokenSymbol} allowance already sufficient`);
+        }
+    } catch (error) {
+        console.error(`Approval error for ${tokenSymbol}:`, error);
+        throw new Error(`Failed to approve ${tokenSymbol}: ${error.message}`);
+    }
+}
+
 async function connectWallet() {
     if (window.ethereum) {
         try {
@@ -59,6 +98,14 @@ async function connectWallet() {
             await provider.ready;
             signer = await provider.getSigner();
             contract = new ethers.Contract(SWAP_ADDRESS, SWAP_ABI, signer);
+
+            // Initialize token contracts
+            tokenContracts["DAK"] = new ethers.Contract(DAK_ADDRESS, ERC20_ABI, signer);
+            tokenContracts["YAKI"] = new ethers.Contract(YAKI_ADDRESS, ERC20_ABI, signer);
+            tokenContracts["WMON"] = new ethers.Contract(WMON_ADDRESS, ERC20_ABI, signer);
+            tokenContracts["USDC"] = new ethers.Contract(USDC_ADDRESS, ERC20_ABI, signer);
+            tokenContracts["MAD"] = new ethers.Contract(MAD_ADDRESS, ERC20_ABI, signer);
+
             document.getElementById("connectButton").style.display = "none";
             document.getElementById("disconnectButton").style.display = "inline-block";
             await updateBalances();
@@ -171,22 +218,27 @@ async function swap() {
             if (fromToken === "DAK") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapDAKForMON(tokenAmount);
             } else if (fromToken === "YAKI") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapYAKIForMON(tokenAmount);
             } else if (fromToken === "WMON") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapWMONForMON(tokenAmount);
             } else if (fromToken === "USDC") {
                 decimals = 6;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapUSDCForMON(tokenAmount);
             } else if (fromToken === "MAD") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapMADForMON(tokenAmount);
             }
         } else {
@@ -197,30 +249,35 @@ async function swap() {
             if (fromToken === "DAK") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapDAKForMON(tokenAmount);
                 await tx.wait();
                 monAmount = ethers.parseEther((parseFloat(amount) * getRate("DAK", "MON")).toString());
             } else if (fromToken === "YAKI") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapYAKIForMON(tokenAmount);
                 await tx.wait();
                 monAmount = ethers.parseEther((parseFloat(amount) * getRate("YAKI", "MON")).toString());
             } else if (fromToken === "WMON") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapWMONForMON(tokenAmount);
                 await tx.wait();
                 monAmount = ethers.parseEther((parseFloat(amount) * getRate("WMON", "MON")).toString());
             } else if (fromToken === "USDC") {
                 decimals = 6;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapUSDCForMON(tokenAmount);
                 await tx.wait();
                 monAmount = ethers.parseEther((parseFloat(amount) * getRate("USDC", "MON")).toString());
             } else if (fromToken === "MAD") {
                 decimals = 18;
                 tokenAmount = ethers.parseUnits(amount, decimals);
+                await approveToken(fromToken, amount); // Add approval step
                 tx = await contract.swapMADForMON(tokenAmount);
                 await tx.wait();
                 monAmount = ethers.parseEther((parseFloat(amount) * getRate("MAD", "MON")).toString());
@@ -255,7 +312,7 @@ async function swap() {
         document.getElementById("toAmount").value = "";
     } catch (error) {
         console.error("Swap error:", error);
-        alert("Swap failed: " + error.message);
+        alert("Swap failed: " + (error.message || error.reason || "Unknown error"));
     }
 }
 
